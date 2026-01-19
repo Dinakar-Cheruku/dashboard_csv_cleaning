@@ -30,12 +30,18 @@ def clean_supplier(value):
         return "Unknown"
     return value
 
+
 def fill_missing_price(df):
+    # Ensure Price is numeric
     df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
-    df['Price'] = df.groupby('category_id')['Price'].transform(lambda x: x.fillna(x.mean()))
+
+    # Replace negative or missing prices with category average
+    def replace_invalid(x):
+        x[x <= 0] = pd.NA  # Treat negative and zero as invalid
+        return x.fillna(x.mean())  # Fill missing/invalid with category mean
+
+    df['Price'] = df.groupby('category_id')['Price'].transform(replace_invalid)
     return df
-
-
 
 
 # ---- Student cleaning ----
@@ -43,7 +49,7 @@ def clean_age(value):
     """Convert 'twenty' → 20, negative or invalid → NaN"""
     if isinstance(value, str):
         if value.lower() == "twenty":
-            return 20
+            return int(20)
     try:
         value = int(value)
         if value < 0:
@@ -66,6 +72,15 @@ def clean_gender(value):
         elif v in ["female", "f"]:
             return "F"
     return "Unknown"
+
+def clean_grade(value):
+    valid_grades = ["A", "B", "C", "D"]
+    if isinstance(value, str):
+        value = value.strip().upper()
+        if value in valid_grades:
+            return value
+    return "F"
+
 
 
 # CLEANING
@@ -104,18 +119,20 @@ dim_date_enrollment['year'] = dim_date_enrollment['full_date'].dt.year
 dim_date_enrollment['month'] = dim_date_enrollment['full_date'].dt.month
 dim_date_enrollment['day'] = dim_date_enrollment['full_date'].dt.day
 dim_student['gender'] = dim_student['gender'].apply(clean_gender)
+dim_student['grade'] = dim_student['grade'].apply(clean_grade)
+
 
 
 #saving all the cleaned dimensions data frames into csv
 
-dim_category.to_csv(os.path.join(clean_dir, "dim_category_cleaned.csv"), index=False)
-dim_product.to_csv(os.path.join(clean_dir, "dim_product_cleaned.csv"), index=False)
-dim_supplier.to_csv(os.path.join(clean_dir, "dim_supplier_cleaned.csv"), index=False)
-dim_date_sales.to_csv(os.path.join(clean_dir, "dim_date_sales_cleaned.csv"), index=False)
+dim_category.to_csv(os.path.join(clean_dir, "dim_category_cleaned.csv"), index=False, na_rep="NULL")
+dim_product.to_csv(os.path.join(clean_dir, "dim_product_cleaned.csv"), index=False, na_rep="NULL")
+dim_supplier.to_csv(os.path.join(clean_dir, "dim_supplier_cleaned.csv"), index=False, na_rep="NULL")
+dim_date_sales.to_csv(os.path.join(clean_dir, "dim_date_sales_cleaned.csv"), index=False, na_rep="NULL")
 
-dim_major.to_csv(os.path.join(clean_dir, "dim_major_cleaned.csv"), index=False)
-dim_student.to_csv(os.path.join(clean_dir, "dim_student_cleaned.csv"), index=False)
-dim_date_enrollment.to_csv(os.path.join(clean_dir, "dim_date_enrollment_cleaned.csv"), index=False)
+dim_major.to_csv(os.path.join(clean_dir, "dim_major_cleaned.csv"), index=False, na_rep="NULL")
+dim_student.to_csv(os.path.join(clean_dir, "dim_student_cleaned.csv"), index=False, na_rep="NULL")
+dim_date_enrollment.to_csv(os.path.join(clean_dir, "dim_date_enrollment_cleaned.csv"), index=False, na_rep="NULL")
 
 print(f"All cleaned dimension tables saved successfully in '{clean_dir}'")
 

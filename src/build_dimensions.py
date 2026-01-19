@@ -134,8 +134,13 @@ print("Majors with NULL:", dim_major["major_name"].isna().sum())
 # Split Name into first and last
 students_df[["first_name", "last_name"]] = students_df["Name"].str.split(" ", n=1, expand=True)
 
-dim_student = students_df[["StudentID", "first_name", "last_name", "Age", "Gender"]].drop_duplicates()
-dim_student = dim_student.rename(columns={"StudentID": "student_id", "Age": "age", "Gender": "gender"})
+dim_student = students_df[["StudentID", "first_name", "last_name", "Age", "Gender", "Grade"]].drop_duplicates()
+dim_student = dim_student.rename(columns={
+    "StudentID": "student_id",
+    "Age": "age",
+    "Gender": "gender",
+    "Grade": "grade"
+})
 
 print("\nDIM_STUDENT (sample 10 rows)")
 print(dim_student.head(10))
