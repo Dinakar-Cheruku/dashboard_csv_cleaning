@@ -51,17 +51,20 @@ def clean_price(value):
 
 # ---- Student cleaning ----
 def clean_age(value):
-    """Convert 'twenty' → 20, negative or invalid → NaN"""
+    """Convert age to int, handle invalid or missing values as 'Unknown'."""
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return "Unknown"
     if isinstance(value, str):
         if value.lower() == "twenty":
-            return int(20)
+            return 20
     try:
         value = int(value)
         if value < 0:
-            return np.nan
+            return "Unknown"
         return value
     except:
-        return np.nan
+        return "Unknown"
+
 
 
 def clean_major(value):
