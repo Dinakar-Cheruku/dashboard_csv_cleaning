@@ -48,6 +48,30 @@ print(dim_product.head(10))
 print("\nTotal Products:", len(dim_product))
 print("Products with NULL category_id:",
       dim_product["category_id"].isna().sum())
+# ----------------------------
+# DIM_SALES
+# ----------------------------
+dim_sale = sales_df.merge(
+    dim_product,
+    left_on='ItemName',
+    right_on='product_name',
+    how='left'
+)
+
+# Add a surrogate sale key
+dim_sale = dim_sale.reset_index().rename(columns={'index': 'sale_id'})
+dim_sale["sale_id"] = dim_sale.index + 1
+
+# Keep only the columns you want
+dim_sale = dim_sale[['sale_id', 'product_id', 'Price', 'Quantity']]
+
+# Add total_price column (just calculation, even if dirty for now)
+# dim_sale['total_price'] = dim_sale['Price'] * dim_sale['Quantity']
+
+# Optional: preview
+print(dim_sale.head())
+
+
 
 
 # ----------------------------
@@ -91,9 +115,9 @@ dim_date["full_date"] = pd.to_datetime(
 )
 
 # Extract date parts
-dim_date["year"] = dim_date["full_date"].dt.year
-dim_date["month"] = dim_date["full_date"].dt.month
-dim_date["day"] = dim_date["full_date"].dt.day
+dim_date["year"] = dim_date["full_date"].dt.year.astype("Int64")
+dim_date["month"] = dim_date["full_date"].dt.month.astype("Int64")
+dim_date["day"] = dim_date["full_date"].dt.day.astype("Int64")
 
 # Add surrogate key
 dim_date["date_id"] = dim_date.index + 1
@@ -133,8 +157,13 @@ print("Majors with NULL:", dim_major["major_name"].isna().sum())
 # ----------------------------
 # Split Name into first and last
 students_df[["first_name", "last_name"]] = students_df["Name"].str.split(" ", n=1, expand=True)
-
-dim_student = students_df[["StudentID", "first_name", "last_name", "Age", "Gender", "Grade"]].drop_duplicates()
+student_merged = students_df.merge(
+    dim_major,
+    left_on="Major",
+    right_on="major_name",
+    how="left"
+)
+dim_student = student_merged[["StudentID", "first_name", "last_name", "Age", "Gender", "Grade", "major_id"]].drop_duplicates()
 dim_student = dim_student.rename(columns={
     "StudentID": "student_id",
     "Age": "age",
@@ -146,6 +175,7 @@ print("\nDIM_STUDENT (sample 10 rows)")
 print(dim_student.head(10))
 print("\nTotal Students:", len(dim_student))
 print("Students with NULL gender:", dim_student["gender"].isna().sum())
+print("Students with NULL major_id:", dim_student["major_id"].isna().sum())
 
 # ----------------------------
 # DIM_DATE (ENROLLMENT)
@@ -157,9 +187,9 @@ dim_enroll_date["full_date"] = pd.to_datetime(
     errors="coerce",
     format="%Y-%m-%d"
 )
-dim_enroll_date["year"] = dim_enroll_date["full_date"].dt.year
-dim_enroll_date["month"] = dim_enroll_date["full_date"].dt.month
-dim_enroll_date["day"] = dim_enroll_date["full_date"].dt.day
+dim_enroll_date["year"] = dim_enroll_date["full_date"].dt.year.astype("Int64")
+dim_enroll_date["month"] = dim_enroll_date["full_date"].dt.month.astype("Int64")
+dim_enroll_date["day"] = dim_enroll_date["full_date"].dt.day.astype("Int64")
 dim_enroll_date["date_id"] = dim_enroll_date.index + 1
 dim_enroll_date = dim_enroll_date[["date_id", "full_date", "year", "month", "day"]]
 
@@ -179,6 +209,8 @@ dim_category.to_csv(os.path.join(raw_dir, "dim_category_raw.csv"), index=False)
 dim_product.to_csv(os.path.join(raw_dir, "dim_product_raw.csv"), index=False)
 dim_supplier.to_csv(os.path.join(raw_dir, "dim_supplier_raw.csv"), index=False)
 dim_date.to_csv(os.path.join(raw_dir, "dim_date_sales_raw.csv"), index=False)
+dim_sale.to_csv(os.path.join(raw_dir, "dim_sale_raw.csv"), index=False)
+
 
 dim_major.to_csv(os.path.join(raw_dir, "dim_major_raw.csv"), index=False)
 dim_student.to_csv(os.path.join(raw_dir, "dim_student_raw.csv"), index=False)
