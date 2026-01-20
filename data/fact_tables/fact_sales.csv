@@ -1,4 +1,4 @@
-}{sale_id,product_id,category_id,supplier_id,date_id,Quantity,Price,total_amount
+sale_id,product_id,category_id,supplier_id,date_id,Quantity,Price,total_amount
 1,1,1,1,1,12,257.31,3087.72
 1,1,1,1,4,12,257.31,3087.72
 2,709,2,5,1,12,233.44,2801.28
